@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{font-family:Arial,sans-serif;color:#172033;background:#f4f6fa}
+    *{box-sizing:border-box}body{margin:0}.wrap{max-width:900px;margin:auto;padding:16px}
+    .card{background:white;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #15233a12}
+    h1{font-size:22px;margin:4px 0 16px}h2{font-size:17px;margin:0 0 12px}
+    input,select,button{font:inherit;padding:11px;border:1px solid #d6dce7;border-radius:9px;width:100%;margin:5px 0}
+    button{background:#142b55;color:white;border:0;font-weight:600;cursor:pointer}
+    button.secondary{background:#e9edf5;color:#172033}button.danger{background:#a4262c}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.muted{color:#667085;font-size:13px}
+    .hidden{display:none}.product{border:1px solid #e1e6ef;border-radius:10px;padding:10px;margin:8px 0}
+    .totals{display:flex;justify-content:space-between;padding:7px 0}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf2fa;font-size:12px}
+    .order{border-top:1px solid #e5e8ef;padding:12px 0}.small{font-size:12px}
+    @media(max-width:560px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Samsung Partner Order</h1>
+  <div id="login" class="card">
+    <h2>Login</h2>
+    <input id="uid" placeholder="User ID" autocomplete="username">
+    <input id="pwd" type="password" placeholder="Password" autocomplete="current-password">
+    <button onclick="doLogin()">Login</button><div id="loginMsg" class="muted"></div>
+  </div>
+  <div id="app" class="hidden">
+    <div class="card">
+      <div class="totals"><b id="who"></b><button class="secondary" style="width:auto;margin:0" onclick="doLogout()">Logout</button></div>
+      <div id="adminPanel" class="hidden">
+        <h2>Admin: Add Partner</h2>
+        <div class="row"><input id="pcode" placeholder="Partner Code"><input id="pname" placeholder="Partner Name"></div>
+        <div class="row"><input id="puser" placeholder="Login User ID"><input id="ppass" placeholder="Temporary Password"></div>
+        <button onclick="addPartnerUI()">Create Partner</button>
+        <h2 style="margin-top:18px">Admin: Add / Update Product & Price</h2>
+        <div class="row"><input id="model" placeholder="Model"><input id="prodcode" placeholder="Product Code"></div>
+        <div class="row"><input id="color" placeholder="Color"><input id="price" type="number" placeholder="Price (BDT)"></div>
+        <button onclick="saveProduct()">Save Product / Price</button>
+        <h2 style="margin-top:18px">Date-wise Export</h2>
+        <div class="row"><input id="from" type="date"><input id="to" type="date"></div>
+        <button onclick="exportCsv()">Download Excel-compatible CSV</button>
+      </div>
+    </div>
+    <div id="partnerPanel" class="card hidden">
+      <h2>Create / Edit Order</h2>
+      <div id="rejectedMsg" class="muted"></div>
+      <div id="items"></div>
+      <button class="secondary" onclick="addLine()">+ Add another Model / Color</button>
+      <div class="totals"><span>Total Quantity</span><b id="totalQty">0</b></div>
+      <div class="totals"><span>Total Order Value</span><b id="totalValue">৳0</b></div>
+      <button onclick="submitCurrent()">Submit Order</button>
+      <div class="muted" id="orderMsg"></div>
+    </div>
+    <div class="card">
+      <h2 id="ordersTitle">Orders</h2><div id="orders"></div>
+    </div>
+  </div>
+</div>
+<script>
+let token="", appData=null, products=[], editingOrder=null, lineCount=0;
+const $=id=>document.getElementById(id);
+function call(fn,...args){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||e)))[fn](...args));}
+async function doLogin(){try{const r=await call("login",$("uid").value,$("pwd").value);token=r.token;await loadApp();}catch(e){$("loginMsg").textContent=e.message;}}
+async function loadApp(){
+  appData=await call("getAppData",token);products=appData.products;
+  $("login").classList.add("hidden");$("app").classList.remove("hidden");
+  $("who").textContent=appData.session.role==="admin"?"ADMIN":appData.session.partnerName+" ("+appData.session.partnerCode+")";
+  $("adminPanel").classList.toggle("hidden",appData.session.role!=="admin");
+  $("partnerPanel").classList.toggle("hidden",appData.session.role!=="partner");
+  if(appData.session.role==="partner") addLine();
+  await refreshOrders();
+}
+async function doLogout(){try{await call("logout",token);}catch(e){}token="";location.reload();}
+function addLine(model="",color="",qty=1){
+  const id=++lineCount, div=document.createElement("div");div.className="product";div.id="line"+id;
+  div.innerHTML=`<select class="model"></select><select class="color"></select><div class="row"><input class="qty" type="number" min="1" value="${qty}" placeholder="Quantity"><button class="danger" onclick="removeLine(${id})">Remove</button></div>`;
+  $("items").appendChild(div);
+  const ms=div.querySelector(".model");ms.innerHTML='<option value="">Select Model</option>'+products.map(p=>`<option>${esc(p.model)}</option>`).join("");
+  ms.value=model;ms.onchange=()=>fillColors(div);
+  div.querySelector(".qty").oninput=calcTotals;fillColors(div,color);calcTotals();
+}
+function fillColors(div,selected=""){
+  const model=div.querySelector(".model").value,p=products.find(x=>x.model===model),cs=div.querySelector(".color");
+  cs.innerHTML='<option value="">Select Color</option>'+((p&&p.colors)||[]).map(c=>`<option value="${esc(c.color)}">${esc(c.color)} — ৳${Number(c.price).toLocaleString()}</option>`).join("");
+  cs.value=selected;cs.onchange=calcTotals;
+}
+function removeLine(id){$("line"+id)?.remove();calcTotals();}
+function readItems(){return [...document.querySelectorAll("#items .product")].map(d=>({model:d.querySelector(".model").value,color:d.querySelector(".color").value,qty:d.querySelector(".qty").value})).filter(x=>x.model&&x.color&&Number(x.qty)>0);}
+function calcTotals(){
+  let q=0,v=0;document.querySelectorAll("#items .product").forEach(d=>{const m=d.querySelector(".model").value,c=d.querySelector(".color").value,n=Number(d.querySelector(".qty").value)||0,p=products.find(x=>x.model===m),pr=p?.colors.find(x=>x.color===c);q+=n;v+=n*(pr?.price||0);});
+  $("totalQty").textContent=q;$("totalValue").textContent="৳"+v.toLocaleString();
+}
+async function submitCurrent(){
+  try{const r=await call("submitOrder",token,readItems(),editingOrder);editingOrder=null;$("orderMsg").textContent="Order submitted: "+r.orderId; $("items").innerHTML="";addLine();await refreshOrders();}
+  catch(e){$("orderMsg").textContent=e.message;}
+}
+async function refreshOrders(){
+  const orders=await call("getOrders",token),isAdmin=appData.session.role==="admin";
+  $("ordersTitle").textContent=isAdmin?"All Partner Orders":"My Orders";
+  $("orders").innerHTML=orders.map(o=>`<div class="order"><div class="totals"><b>${esc(o.OrderID)}</b><span class="pill">${esc(o.Status)}</span></div><div class="muted">${esc(o.PartnerName)} • ${new Date(o.OrderDate).toLocaleString()} • ${o.TotalQty} pcs • ৳${Number(o.TotalValue).toLocaleString()}</div><div class="small">${o.details.map(d=>esc(d.Model)+" / "+esc(d.Color)+" × "+d.Qty).join("<br>")}</div>${isAdmin&&o.Status==="Submitted"?`<button onclick="decision('${o.OrderID}','Approved')">Approve</button><button class="danger" onclick="decision('${o.OrderID}','Rejected')">Reject</button>`:""}${!isAdmin&&["Submitted","Rejected"].includes(o.Status)?`<button class="secondary" onclick="editOrder('${o.OrderID}')">Edit & Resubmit</button><button class="danger" onclick="cancel('${o.OrderID}')">Cancel Order</button><input type="file" id="file${safeId(o.OrderID)}" accept="image/*,.pdf"><button class="secondary" onclick="upload('${o.OrderID}')">Upload Deposit Slip</button>${o.Status==="Rejected"?'<div class="muted">Admin feedback: '+esc(o.RejectReason||"Please correct and resubmit")+'</div>':""}`:""}${o.deposits.map(x=>`<a target="_blank" href="${x.FileUrl}">Deposit: ${esc(x.FileName)}</a>`).join("<br>")}</div>`).join("")||'<div class="muted">No orders yet.</div>';
+}
+async function editOrder(id){const os=await call("getOrders",token),o=os.find(x=>x.OrderID===id);if(!o)return;editingOrder=id;$("items").innerHTML="";o.details.forEach(d=>addLine(d.Model,d.Color,d.Qty));$("rejectedMsg").textContent=o.Status==="Rejected"?"Rejected: "+(o.RejectReason||"Please correct and resubmit"):"Editing submitted order "+id;}
+async function cancel(id){if(!confirm("এই অর্ডার Cancel করবেন?"))return;try{await call("cancelOrder",token,id);await refreshOrders();}catch(e){alert(e.message);}}
+async function decision(id,d){let reason="";if(d==="Rejected"){reason=prompt("Reject reason লিখুন:")||"Please correct and resubmit";}try{await call("adminDecision",token,id,d,reason);await refreshOrders();}catch(e){alert(e.message);}}
+async function addPartnerUI(){try{await call("addPartner",token,$("pcode").value,$("pname").value,$("puser").value,$("ppass").value);alert("Partner created");["pcode","pname","puser","ppass"].forEach(x=>$(x).value="");}catch(e){alert(e.message);}}
+async function saveProduct(){try{await call("upsertProductPrice",token,$("model").value,$("prodcode").value,$("color").value,$("price").value,"Active");alert("Saved");appData=await call("getAppData",token);products=appData.products;}catch(e){alert(e.message);}}
+async function upload(id){const f=$("file"+safeId(id)).files[0];if(!f)return alert("ফাইল নির্বাচন করুন");const b=await f.arrayBuffer(),bytes=new Uint8Array(b);let binary="";bytes.forEach(x=>binary+=String.fromCharCode(x));try{await call("uploadDeposit",token,id,f.name,f.type||"application/octet-stream",btoa(binary));alert("Slip uploaded");await refreshOrders();}catch(e){alert(e.message);}}
+async function exportCsv(){try{const csv=await call("exportOrdersCsv",token,$("from").value,$("to").value);const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Samsung_Orders_"+$("from").value+"_to_"+$("to").value+".csv";a.click();URL.revokeObjectURL(a.href);}catch(e){alert(e.message);}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function safeId(s){return String(s).replace(/[^a-zA-Z0-9]/g,"");}
+</script>
+</body></html>

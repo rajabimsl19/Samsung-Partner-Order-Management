@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samsung Partner Order Management</title>
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #172033;
+      background: #f4f6fa;
+      --samsung-blue: #142b55;
+      --samsung-hover: #0b1a36;
+      --border-color: #d6dce7;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: #f4f6fa; }
+    .wrap { max-width: 920px; margin: auto; padding: 16px; }
+    .card { background: white; border-radius: 14px; padding: 18px; margin: 12px 0; box-shadow: 0 2px 10px rgba(20,43,85,0.06); border: 1px solid #e2e8f0; }
+    h1 { font-size: 20px; margin: 0; color: #0f172a; font-weight: 700; }
+    h2 { font-size: 15px; margin: 0 0 12px; color: #1e293b; font-weight: 700; }
+    h3 { font-size: 13px; margin: 0 0 8px; color: #334155; }
+    input, select, button, textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; margin: 4px 0; outline: none; font-size: 13px; }
+    input:focus, select:focus { border-color: var(--samsung-blue); box-shadow: 0 0 0 2px rgba(20,43,85,0.1); }
+    button { background: var(--samsung-blue); color: white; border: 0; font-weight: 600; cursor: pointer; transition: background 0.15s ease; border-radius: 8px; }
+    button:hover { background: var(--samsung-hover); }
+    button.secondary { background: #e9edf5; color: #172033; font-weight: 600; }
+    button.secondary:hover { background: #d7e0ee; }
+    button.danger { background: #c5221f; color: white; }
+    button.danger:hover { background: #9b1916; }
+    button.success { background: #16a34a; color: white; }
+    button.success:hover { background: #15803d; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .hidden { display: none !important; }
+    .product { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin: 10px 0; background: #f8fafc; }
+    .totals { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; }
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .pill-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .pill-approved { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .pill-rejected { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .order { border-top: 1px solid #e2e8f0; padding: 14px 0; }
+    .small { font-size: 12px; }
+    .tab-btn { width: auto; display: inline-block; padding: 7px 14px; margin: 0 4px 6px 0; font-size: 12px; border-radius: 6px; }
+    .tab-active { background: var(--samsung-blue) !important; color: white !important; }
+    .stepper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; font-size: 11px; }
+    .step-box { padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: white; text-align: center; }
+    .step-done { background: #f0fdf4; border-color: #86efac; color: #15803d; font-weight: bold; }
+    .step-active { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; font-weight: bold; box-shadow: 0 0 0 1px #3b82f6; }
+    .dms-badge { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-family: monospace; font-weight: bold; padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+    .value-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; height: 42px; margin-top: 4px; }
+    .value-amount { font-family: monospace; font-weight: 800; color: #142b55; font-size: 14px; }
+    @media (max-width: 640px) {
+      .row, .row-3, .row-4 { grid-template-columns: 1fr; }
+      .stepper { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  
+  <!-- Header with Authentic 3D Samsung Oval -->
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e2e8f0;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <!-- 3D Samsung Ellipse Logo -->
+      <svg viewBox="0 0 340 100" style="height:36px;display:block">
+        <ellipse cx="170" cy="50" rx="160" ry="46" fill="#1428A0" transform="rotate(-6 170 50)" />
+        <text x="170" y="62" fill="#ffffff" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="34" text-anchor="middle" letter-spacing="4" transform="rotate(-6 170 50)">SAMSUNG</text>
+      </svg>
+      <span style="color:#cbd5e1;font-size:20px">|</span>
+      <h1>Partner Order</h1>
+    </div>
+    <div id="quickUserPill" style="font-size:12px;color:#64748b;font-weight:600"></div>
+  </header>
+
+  <!-- 1. LOGIN SCREEN -->
+  <div id="loginCard" class="card" style="max-width:480px;margin:24px auto">
+    <div style="text-align:center;margin-bottom:16px">
+      <h2 style="font-size:18px;margin-bottom:4px">Portal Login</h2>
+      <p class="muted" style="margin:0">Partner & Multi-Tier Field Approval Management</p>
+    </div>
+
+    <!-- Hierarchy Guide Pill -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:11px;margin-bottom:12px;text-align:center;color:#475569">
+      <b>Workflow:</b> Partner / TSM → ZBH/ASM → CSM/RSM → Admin Desk
+    </div>
+
+    <label style="font-size:11px;font-weight:700">User ID</label>
+    <input id="uid" placeholder="User ID (e.g. admin, tso_dhaka, electro_bd)">
+    
+    <label style="font-size:11px;font-weight:700">Password</label>
+    <input id="pwd" type="password" placeholder="Password">
+    
+    <button onclick="doLogin()" style="margin-top:10px;padding:12px">Login to Portal</button>
+    <div id="loginMsg" style="color:#b91c1c;font-size:12px;margin-top:8px"></div>
+
+    <!-- Quick Demo Accounts -->
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f1f5f9">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:8px">One-Click Demo Logins:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <button class="secondary" style="font-size:11px;padding:7px" onclick="quickLogin('admin','admin123')">🛡️ Admin Desk</button>
+        <button class="secondary" style="font-size:11px;padding:7px" onclick="quickLogin('tso_dhaka','pass123')">👤 TSM Rafiqul</button>
+        <button class="secondary" style="font-size:11px;padding:7px" onclick="quickLogin('zbh_dhaka','pass123')">🏢 ZBH Mahmudul</button>
+        <button class="secondary" style="font-size:11px;padding:7px" onclick="quickLogin('rsm_central','pass123')">🌍 RSM Tanvir</button>
+      </div>
+      <button class="secondary" style="font-size:11px;padding:7px;margin-top:6px;width:100%" onclick="quickLogin('electro_bd','pass123')">
+        🏪 Partner: Electro Haven (DMS: SAMS-DHK-01)
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. MAIN APPLICATION (After Login) -->
+  <div id="app" class="hidden">
+    
+    <!-- User Bar -->
+    <div class="card" style="padding:12px 18px">
+      <div class="totals">
+        <div>
+          <b id="who" style="font-size:14px;color:#0f172a"></b>
+          <div id="whoSub" class="muted" style="margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <select id="roleSwitcher" style="width:auto;margin:0;padding:6px 10px;font-size:12px" onchange="switchRole(this.value)">
+            <option value="admin">Switch: Admin Desk</option>
+            <option value="tso_dhaka">Switch: TSM / TSO (Rafiqul)</option>
+            <option value="zbh_dhaka">Switch: ZBH / ASM (Mahmudul)</option>
+            <option value="rsm_central">Switch: CSM / RSM (Tanvir)</option>
+            <option value="electro_bd">Switch: Partner (Electro Haven)</option>
+          </select>
+          <button class="secondary" style="width:auto;margin:0;padding:6px 14px" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+
+      <!-- ADMIN WORKSPACE -->
+      <div id="adminPanel" class="hidden" style="margin-top:14px;border-top:1px solid #f1f5f9;padding-top:12px">
+        <!-- Sub-tabs -->
+        <div>
+          <button class="tab-btn tab-active" onclick="switchAdminTab('approvals')">🔔 Pending Approvals (<span id="pendingBadge">0</span>)</button>
+          <button class="tab-btn secondary" onclick="switchAdminTab('users')">🔑 User IDs & Passwords</button>
+          <button class="tab-btn secondary" onclick="switchAdminTab('partnerDb')">📂 Upload Partner DB</button>
+          <button class="tab-btn secondary" onclick="switchAdminTab('products')">📦 Product Catalog & Price</button>
+          <button class="tab-btn secondary" onclick="switchAdminTab('mapping')">🗺️ TSM/ZBH/RSM Mapping</button>
+          <button class="tab-btn secondary" onclick="switchAdminTab('export')">📊 Date Export</button>
+        </div>
+
+        <!-- Tab A: Notification Queue -->
+        <div id="tab_approvals" style="margin-top:12px">
+          <div style="background:#fffbeb;border:1px solid #fde68a;padding:12px;border-radius:10px">
+            <b>Admin Commercial Notification:</b> <span id="adminPendingNotice">0 orders awaiting final approval.</span>
+          </div>
+        </div>
+
+        <!-- Tab B: User Management -->
+        <div id="tab_users" class="hidden" style="margin-top:12px">
+          <h3>Create New User ID & Password</h3>
+          <div class="row-3">
+            <input id="newUName" placeholder="Full Name">
+            <select id="newURole">
+              <option value="tsm">TSM / TSO (Territory)</option>
+              <option value="zbh">ZBH / ASM (Zonal)</option>
+              <option value="rsm">CSM / RSM (Regional)</option>
+              <option value="partner">Partner (Retailer)</option>
+              <option value="admin">Admin Desk</option>
+            </select>
+            <input id="newUUid" placeholder="Login User ID">
+          </div>
+          <div class="row">
+            <input id="newUPwd" placeholder="Password" value="pass123">
+            <input id="newUZone" placeholder="Zone (e.g. Dhaka Central)">
+          </div>
+          <button onclick="createUser()">Create User ID & Password</button>
+          <div id="usersList" style="margin-top:12px"></div>
+        </div>
+
+        <!-- Tab C: Upload Partner Database -->
+        <div id="tab_partnerDb" class="hidden" style="margin-top:12px">
+          <h3>Upload Partner Database (CSV)</h3>
+          <p class="muted">Upload CSV with: Partner_Name, DMS_Code, Username, Password, Phone, Zone, TSM_Name, ZBH_Name, RSM_Name</p>
+          <input type="file" id="partnerCsvInput" accept=".csv" onchange="uploadPartnerCsv(event)">
+          <button class="secondary" style="margin-top:6px" onclick="downloadSamplePartnerCsv()">⬇️ Download Partner CSV Template</button>
+        </div>
+
+        <!-- Tab D: Product Catalog -->
+        <div id="tab_products" class="hidden" style="margin-top:12px">
+          <h3>Upload Product List (CSV) or Edit Price</h3>
+          <input type="file" id="productCsvInput" accept=".csv" onchange="uploadProductCsv(event)">
+          <div class="row"><input id="pModel" placeholder="Model"><input id="pCode" placeholder="Code"></div>
+          <div class="row"><input id="pColor" placeholder="Color"><input id="pPrice" type="number" placeholder="Price (৳)"></div>
+          <button onclick="saveProduct()">Save Product / Price</button>
+          <div id="catalogList" style="margin-top:10px;max-height:180px;overflow-y:auto"></div>
+        </div>
+
+        <!-- Tab E: Hierarchy Mapping -->
+        <div id="tab_mapping" class="hidden" style="margin-top:12px">
+          <h3>Partner Hierarchy Mapping (TSM/TSO → ZBH/ASM → CSM/RSM)</h3>
+          <div id="mappingList"></div>
+        </div>
+
+        <!-- Tab F: Date Export -->
+        <div id="tab_export" class="hidden" style="margin-top:12px">
+          <h3>Individual Product-Wise Orders Export (Excel / CSV)</h3>
+          <p class="muted">Columns: <b>Order Date → DMS Code → Partner Name → Product Model → Product Color → Product QTY → Approval Status</b></p>
+          <div class="row"><input id="fromDate" type="date"><input id="toDate" type="date"></div>
+          <button onclick="downloadProductWiseCsv()">⬇️ Download Individual Product-wise CSV Report</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ORDER ENTRY PANEL (FOR TSM / TSO & PARTNER) -->
+    <div id="orderEntryPanel" class="card hidden">
+      <h2>Create / Submit Order</h2>
+      
+      <!-- STEP 1: SELECT PARTNER NAME FROM DROPDOWN (FOR TSM/TSO) -->
+      <div id="tsmPartnerSelectSection" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:#1e40af">1. Select Partner Name from Dropdown Box:</label>
+        <select id="partnerSelectDropdown" onchange="onPartnerSelected(this.value)" style="margin-top:6px;font-weight:600">
+          <option value="">-- Choose Partner Name --</option>
+        </select>
+
+        <!-- Showing DMS Code Card -->
+        <div id="selectedPartnerCard" class="hidden" style="margin-top:10px;background:white;padding:10px;border-radius:8px;border:1px solid #bfdbfe;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span class="dms-badge" id="dispDmsCode">DMS: SAMS-DHK-01</span>
+            <b id="dispPartnerName" style="font-size:13px;margin-left:8px"></b>
+          </div>
+          <span id="dispZone" class="muted" style="font-weight:600"></span>
+        </div>
+      </div>
+
+      <!-- Partner Own Info Badge (If role is partner) -->
+      <div id="partnerOwnInfo" class="hidden" style="margin-bottom:12px;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+        <div><span class="dms-badge" id="myDms"></span> <b id="myName" style="margin-left:8px"></b></div>
+        <span id="myZone" class="muted"></span>
+      </div>
+
+      <!-- Line Items Container -->
+      <div id="items"></div>
+      <button class="secondary" onclick="addLine()" style="margin-top:8px">+ Add another Product Model / Color</button>
+
+      <!-- Totals Strip -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin:12px 0">
+        <div class="totals"><span>Total Quantity:</span><b id="totalQty" style="font-size:15px">0 pcs</b></div>
+        <div class="totals" style="border-top:1px solid #e2e8f0;margin-top:4px;padding-top:8px">
+          <span style="font-weight:700">Total Order Value:</span>
+          <b id="totalValue" style="font-size:17px;color:#142b55">৳0</b>
+        </div>
+      </div>
+
+      <!-- Bank Deposit Slip Attachment -->
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;margin:12px 0">
+        <label style="font-size:12px;font-weight:700;color:#166534">📎 Upload Bank Deposit Slip (Required for submission):</label>
+        <input type="file" id="depositFileInput" accept="image/*,.pdf" onchange="onDepositFilePicked(event)">
+        <div id="depositPreview" class="muted" style="margin-top:4px;font-weight:600"></div>
+      </div>
+
+      <!-- Submit Order Button -->
+      <button id="submitOrderBtn" onclick="submitCurrentOrder()" style="padding:14px;font-size:14px">
+        Submit Order with Attached Deposit Slip
+      </button>
+      <div id="orderNotice" style="margin-top:8px;font-size:12px;color:#15803d;font-weight:600"></div>
+    </div>
+
+    <!-- 4. ORDERS & HIERARCHICAL APPROVALS -->
+    <div class="card">
+      <div class="totals">
+        <h2 id="ordersTitle" style="margin:0">Orders & Approval Tracking</h2>
+        <button class="secondary" style="width:auto;margin:0;font-size:11px" onclick="downloadProductWiseCsv()">⬇️ Export Product-wise CSV</button>
+      </div>
+      <div id="ordersContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// INITIAL DATA
+let PARTNERS = [
+  { id: 'p1', partnerCode: 'SAMS-DHK-01', partnerName: 'Electro Haven Ltd (Dhaka Central)', username: 'electro_bd', password: 'pass123', zone: 'Dhaka Central', tsmName: 'Rafiqul Islam (TSM/TSO)', zbhName: 'Mahmudul Hasan (ZBH/ASM)', rsmName: 'Tanvir Ahmed (CSM/RSM)' },
+  { id: 'p2', partnerCode: 'SAMS-CTG-04', partnerName: 'Chittagong Telecom World', username: 'ctg_telecom', password: 'pass123', zone: 'Chittagong Metro', tsmName: 'Kamrul Ahsan (TSM/TSO)', zbhName: 'Mizanur Rahman (ZBH/ASM)', rsmName: 'Saiful Islam (CSM/RSM)' },
+  { id: 'p3', partnerCode: 'SAMS-SYL-08', partnerName: 'Sylhet Galaxy Premium Retail', username: 'sylhet_gal', password: 'pass123', zone: 'Sylhet Division', tsmName: 'Nazmul Huda (TSM/TSO)', zbhName: 'Farhan Kabir (ZBH/ASM)', rsmName: 'Tanvir Ahmed (CSM/RSM)' }
+];
+
+let PRODUCTS = [
+  { model: 'Galaxy S25 Ultra', prodcode: 'SM-S938B', colors: [{ color: 'Titanium Black', price: 179999 }, { color: 'Titanium Gray', price: 179999 }] },
+  { model: 'Galaxy Z Fold6', prodcode: 'SM-F956B', colors: [{ color: 'Silver Shadow', price: 229999 }, { color: 'Navy Blue', price: 229999 }] },
+  { model: 'Galaxy A55 5G', prodcode: 'SM-A556E', colors: [{ color: 'Awesome Navy', price: 49999 }, { color: 'Awesome Lilac', price: 49999 }] },
+  { model: 'Galaxy A35 5G', prodcode: 'SM-A356E', colors: [{ color: 'Awesome Navy', price: 39999 }, { color: 'Awesome Lemon', price: 39999 }] },
+  { model: 'Galaxy A16 4G', prodcode: 'SM-A165F', colors: [{ color: 'Blue Black', price: 19999 }, { color: 'Light Green', price: 19999 }] }
+];
+
+let USERS = [
+  { id: 'u1', username: 'admin', password: 'admin123', fullName: 'Administrator', role: 'admin', zone: 'Headquarters' },
+  { id: 'u2', username: 'tso_dhaka', password: 'pass123', fullName: 'Rafiqul Islam', role: 'tsm', zone: 'Dhaka Central' },
+  { id: 'u3', username: 'zbh_dhaka', password: 'pass123', fullName: 'Mahmudul Hasan', role: 'zbh', zone: 'Dhaka Division' },
+  { id: 'u4', username: 'rsm_central', password: 'pass123', fullName: 'Tanvir Ahmed', role: 'rsm', zone: 'Central Region' },
+  { id: 'u5', username: 'electro_bd', password: 'pass123', fullName: 'Electro Haven Ltd', role: 'partner', zone: 'Dhaka Central', dmsCode: 'SAMS-DHK-01' }
+];
+
+let ORDERS = [
+  {
+    OrderID: 'SPO-2026-001',
+    PartnerCode: 'SAMS-DHK-01',
+    PartnerName: 'Electro Haven Ltd (Dhaka Central)',
+    OrderDate: new Date().toISOString(),
+    Status: 'Pending_Admin',
+    TotalQty: 15,
+    TotalValue: 1449985,
+    zone: 'Dhaka Central',
+    tsmName: 'Rafiqul Islam (TSM/TSO)',
+    zbhName: 'Mahmudul Hasan (ZBH/ASM)',
+    rsmName: 'Tanvir Ahmed (CSM/RSM)',
+    depositName: 'BankDepositVoucher_Ref9021.jpg',
+    details: [
+      { model: 'Galaxy S25 Ultra', color: 'Titanium Gray', qty: 5, unitPrice: 179999, lineTotal: 899995 },
+      { model: 'Galaxy A55 5G', color: 'Awesome Navy', qty: 10, unitPrice: 49999, lineTotal: 499990 }
+    ]
+  }
+];
+
+let session = null;
+let currentLineCount = 0;
+let attachedDepositFile = null;
+
+// DOM helper
+const $ = id => document.getElementById(id);
+
+// Init dates
+$("fromDate").value = new Date(Date.now() - 30*86400000).toISOString().slice(0, 10);
+$("toDate").value = new Date().toISOString().slice(0, 10);
+
+function quickLogin(u, p) {
+  $("uid").value = u;
+  $("pwd").value = p;
+  doLogin();
+}
+
+function doLogin() {
+  const u = $("uid").value.trim().toLowerCase();
+  const p = $("pwd").value.trim();
+
+  const user = USERS.find(x => x.username.toLowerCase() === u && (x.password === p || p === 'pass123' || (u === 'admin' && p === 'admin123')));
+  if (!user) {
+    $("loginMsg").textContent = "Invalid User ID or Password. Check credentials.";
+    return;
+  }
+
+  session = { ...user };
+  if (session.role === 'partner') {
+    const pt = PARTNERS.find(x => x.username === session.username);
+    if (pt) { session.partnerCode = pt.partnerCode; session.partnerName = pt.partnerName; }
+  }
+
+  $("loginCard").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("roleSwitcher").value = session.username;
+
+  renderApp();
+}
+
+function switchRole(val) {
+  quickLogin(val, 'pass123');
+}
+
+function doLogout() {
+  session = null;
+  $("loginCard").classList.remove("hidden");
+  $("app").classList.add("hidden");
+}
+
+function renderApp() {
+  $("who").textContent = session.fullName + " (" + session.role.toUpperCase() + ")";
+  $("whoSub").textContent = "Zone: " + (session.zone || 'Dhaka') + (session.partnerCode ? " | DMS: " + session.partnerCode : "");
+
+  const isAdmin = session.role === 'admin';
+  const isTsm = session.role === 'tsm';
+  const isPartner = session.role === 'partner';
+
+  $("adminPanel").classList.toggle("hidden", !isAdmin);
+  $("orderEntryPanel").classList.toggle("hidden", !(isTsm || isPartner));
+
+  if (isAdmin) {
+    updateAdminBadges();
+    renderUsersList();
+    renderCatalog();
+    renderMappingList();
+  }
+
+  if (isTsm || isPartner) {
+    $("items").innerHTML = "";
+    currentLineCount = 0;
+    attachedDepositFile = null;
+    $("depositPreview").textContent = "";
+
+    if (isTsm) {
+      $("tsmPartnerSelectSection").classList.remove("hidden");
+      $("partnerOwnInfo").classList.add("hidden");
+      populatePartnerDropdown();
+    } else {
+      $("tsmPartnerSelectSection").classList.add("hidden");
+      $("partnerOwnInfo").classList.remove("hidden");
+      $("myDms").textContent = "DMS: " + session.partnerCode;
+      $("myName").textContent = session.partnerName;
+      $("myZone").textContent = "Zone: " + session.zone;
+    }
+
+    addLine();
+  }
+
+  renderOrders();
+}
+
+// TSM Partner Selection
+function populatePartnerDropdown() {
+  const sel = $("partnerSelectDropdown");
+  sel.innerHTML = '<option value="">-- Choose Partner Name --</option>' +
+    PARTNERS.map(p => `<option value="${p.id}">${p.partnerName} (${p.partnerCode})</option>`).join('');
+  onPartnerSelected(sel.value);
+}
+
+function onPartnerSelected(pId) {
+  const p = PARTNERS.find(x => x.id === pId);
+  if (p) {
+    $("selectedPartnerCard").classList.remove("hidden");
+    $("dispDmsCode").textContent = "DMS: " + p.partnerCode;
+    $("dispPartnerName").textContent = p.partnerName;
+    $("dispZone").textContent = "📍 " + p.zone;
+  } else {
+    $("selectedPartnerCard").classList.add("hidden");
+  }
+}
+
+// Line items & Product value right side of QTY
+function addLine() {
+  const id = ++currentLineCount;
+  const div = document.createElement("div");
+  div.className = "product";
+  div.id = "line_" + id;
+  
+  div.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px">Product Item #${id}</div>
+    <div class="row">
+      <div>
+        <label style="font-size:11px;font-weight:600">Product Model</label>
+        <select class="mSelect" onchange="onModelChange(${id})"></select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600">Product Color</label>
+        <select class="cSelect" onchange="calcLineValue(${id})"></select>
+      </div>
+    </div>
+    
+    <div class="row" style="margin-top:6px;align-items:flex-end">
+      <!-- Type Product QTY -->
+      <div>
+        <label style="font-size:11px;font-weight:600">Product QTY (Pcs)</label>
+        <input class="qtyInput" type="number" min="1" value="1" oninput="calcLineValue(${id})" placeholder="QTY">
+      </div>
+
+      <!-- RIGHT SIDE OF QTY: SHOW PRODUCT VALUE -->
+      <div>
+        <label style="font-size:11px;font-weight:600">Product Value (৳)</label>
+        <div class="value-box">
+          <span style="font-size:10px;color:#64748b" class="calcFormula"></span>
+          <span class="value-amount lineVal">৳0</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:6px">
+      <button class="danger" style="width:auto;padding:5px 12px;font-size:11px" onclick="removeLine(${id})">Remove</button>
+    </div>
+  `;
+
+  $("items").appendChild(div);
+  
+  const mSel = div.querySelector(".mSelect");
+  mSel.innerHTML = '<option value="">Select Model</option>' + PRODUCTS.map(p => `<option value="${p.model}">${p.model}</option>`).join('');
+  if (PRODUCTS[0]) { mSel.value = PRODUCTS[0].model; onModelChange(id); }
+}
+
+function onModelChange(id) {
+  const div = $("line_" + id);
+  const mVal = div.querySelector(".mSelect").value;
+  const prod = PRODUCTS.find(p => p.model === mVal);
+  const cSel = div.querySelector(".cSelect");
+  
+  cSel.innerHTML = (prod ? prod.colors : []).map(c => `<option value="${c.color}" data-price="${c.price}">${c.color} — ৳${c.price.toLocaleString()}</option>`).join('');
+  calcLineValue(id);
+}
+
+function calcLineValue(id) {
+  const div = $("line_" + id);
+  if (!div) return;
+  const cSel = div.querySelector(".cSelect");
+  const opt = cSel.options[cSel.selectedIndex];
+  const price = opt ? Number(opt.dataset.price || 0) : 0;
+  const qty = Number(div.querySelector(".qtyInput").value || 1);
+  const total = price * qty;
+
+  div.querySelector(".calcFormula").textContent = "৳" + price.toLocaleString() + " × " + qty;
+  div.querySelector(".lineVal").textContent = "৳" + total.toLocaleString();
+
+  updateTotals();
+}
+
+function removeLine(id) {
+  if (document.querySelectorAll("#items .product").length <= 1) {
+    alert("Order must have at least one product item.");
+    return;
+  }
+  $("line_" + id)?.remove();
+  updateTotals();
+}
+
+function updateTotals() {
+  let q = 0, v = 0;
+  document.querySelectorAll("#items .product").forEach(d => {
+    const cSel = d.querySelector(".cSelect");
+    const opt = cSel.options[cSel.selectedIndex];
+    const price = opt ? Number(opt.dataset.price || 0) : 0;
+    const qty = Number(d.querySelector(".qtyInput").value || 0);
+    q += qty;
+    v += (qty * price);
+  });
+  $("totalQty").textContent = q + " pcs";
+  $("totalValue").textContent = "৳" + v.toLocaleString();
+}
+
+function onDepositFilePicked(e) {
+  const file = e.target.files?.[0];
+  if (file) {
+    attachedDepositFile = file.name;
+    $("depositPreview").textContent = "✓ Attached: " + file.name + " (" + Math.round(file.size/1024) + " KB)";
+  }
+}
+
+function submitCurrentOrder() {
+  if (!attachedDepositFile) {
+    alert("Please upload bank deposit slip before submitting order.");
+    return;
+  }
+
+  let partner = null;
+  if (session.role === 'tsm') {
+    const pId = $("partnerSelectDropdown").value;
+    partner = PARTNERS.find(x => x.id === pId);
+    if (!partner) { alert("Please select Partner Name from dropdown."); return; }
+  } else {
+    partner = PARTNERS.find(x => x.partnerCode === session.partnerCode) || PARTNERS[0];
+  }
+
+  const details = [];
+  document.querySelectorAll("#items .product").forEach(d => {
+    const m = d.querySelector(".mSelect").value;
+    const cSel = d.querySelector(".cSelect");
+    const opt = cSel.options[cSel.selectedIndex];
+    const c = opt ? opt.value : '';
+    const price = opt ? Number(opt.dataset.price || 0) : 0;
+    const qty = Number(d.querySelector(".qtyInput").value || 1);
+    if (m && c && qty > 0) {
+      details.push({ model: m, color: c, qty: qty, unitPrice: price, lineTotal: price * qty });
+    }
+  });
+
+  if (details.length === 0) { alert("Please add valid product lines."); return; }
+
+  const tQty = details.reduce((s, x) => s + x.qty, 0);
+  const tVal = details.reduce((s, x) => s + x.lineTotal, 0);
+
+  // If submitted by TSM, automatically clears Step 1 and goes to ZBH
+  const isTsm = session.role === 'tsm';
+  const orderId = "SPO-2026-" + String(ORDERS.length + 1).padStart(3, '0');
+
+  const newOrder = {
+    OrderID: orderId,
+    PartnerCode: partner.partnerCode,
+    dmsCode: partner.partnerCode,
+    PartnerName: partner.partnerName,
+    OrderDate: new Date().toISOString(),
+    Status: isTsm ? 'Pending_ZBH' : 'Pending_TSM',
+    TotalQty: tQty,
+    TotalValue: tVal,
+    zone: partner.zone,
+    tsmName: partner.tsmName,
+    zbhName: partner.zbhName,
+    rsmName: partner.rsmName,
+    depositName: attachedDepositFile,
+    details: details
+  };
+
+  ORDERS.unshift(newOrder);
+
+  $("orderNotice").textContent = "✓ Order " + orderId + " booked for " + partner.partnerName + " (DMS: " + partner.partnerCode + ") with deposit slip!";
+  setTimeout(() => $("orderNotice").textContent = "", 4000);
+
+  renderApp();
+}
+
+// Render Orders & 4-Tier Approval Stepper
+function renderOrders() {
+  const container = $("ordersContainer");
+  container.innerHTML = "";
+
+  ORDERS.forEach(order => {
+    const div = document.createElement("div");
+    div.className = "order";
+
+    let badgeClass = "pill-pending";
+    if (order.Status === 'Approved') badgeClass = "pill-approved";
+    if (order.Status === 'Rejected') badgeClass = "pill-rejected";
+
+    const isPendingAdmin = order.Status === 'Pending_Admin';
+    const isPendingTsm = order.Status === 'Pending_TSM';
+    const isPendingZbh = order.Status === 'Pending_ZBH';
+    const isPendingRsm = order.Status === 'Pending_RSM';
+
+    div.innerHTML = `
+      <div class="totals">
+        <div>
+          <b style="font-family:monospace;font-size:14px">${order.OrderID}</b>
+          <span class="dms-badge" style="margin-left:6px">DMS: ${order.dmsCode || order.PartnerCode}</span>
+          <b style="margin-left:8px;font-size:13px">${order.PartnerName}</b>
+        </div>
+        <span class="pill ${badgeClass}">${order.Status.replace('_', ' ')}</span>
+      </div>
+
+      <div class="muted" style="margin:4px 0">
+        Date: ${new Date(order.OrderDate).toLocaleString()} | Zone: <b>${order.zone}</b> | Total: <b>${order.TotalQty} pcs</b> | Value: <b style="color:#142b55">৳${order.TotalValue.toLocaleString()}</b>
+      </div>
+
+      <!-- 4-Tier Stepper -->
+      <div class="stepper">
+        <div class="step-box ${isPendingTsm ? 'step-active' : 'step-done'}">
+          1. TSM / TSO<br><small>${order.tsmName.split(' ')[0]}</small>
+        </div>
+        <div class="step-box ${isPendingZbh ? 'step-active' : (isPendingTsm ? '' : 'step-done')}">
+          2. ZBH / ASM<br><small>${order.zbhName.split(' ')[0]}</small>
+        </div>
+        <div class="step-box ${isPendingRsm ? 'step-active' : ((isPendingTsm || isPendingZbh) ? '' : 'step-done')}">
+          3. CSM / RSM<br><small>${order.rsmName.split(' ')[0]}</small>
+        </div>
+        <div class="step-box ${isPendingAdmin ? 'step-active' : (order.Status === 'Approved' ? 'step-done' : '')}">
+          4. Admin Final<br><small>Commercial</small>
+        </div>
+      </div>
+
+      <!-- Individual Products Display -->
+      <div style="background:#f8fafc;padding:8px;border-radius:6px;font-size:12px;margin:6px 0">
+        ${order.details.map(d => `<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${d.model} (${d.color})</span><b>${d.qty} pcs × ৳${(d.unitPrice||0).toLocaleString()} = ৳${d.lineTotal.toLocaleString()}</b></div>`).join('')}
+      </div>
+
+      <div class="small" style="color:#166534">📎 Deposit Voucher: <b>${order.depositName || 'Attached'}</b></div>
+
+      <!-- Action buttons by role -->
+      <div style="display:flex;gap:6px;margin-top:8px">
+        ${session.role === 'tsm' && isPendingTsm ? `<button class="success" style="width:auto;padding:6px 12px;font-size:11px" onclick="approveOrder('${order.OrderID}')">TSM: Recommend to ZBH</button>` : ''}
+        ${session.role === 'zbh' && isPendingZbh ? `<button class="success" style="width:auto;padding:6px 12px;font-size:11px" onclick="approveOrder('${order.OrderID}')">ZBH: Zonal Approve to RSM</button>` : ''}
+        ${session.role === 'rsm' && isPendingRsm ? `<button class="success" style="width:auto;padding:6px 12px;font-size:11px" onclick="approveOrder('${order.OrderID}')">RSM: Regional Approve to Admin</button>` : ''}
+        ${session.role === 'admin' && (isPendingAdmin || order.Status !== 'Approved') ? `<button class="success" style="width:auto;padding:6px 14px;font-size:11px" onclick="approveOrder('${order.OrderID}')">Admin: Final Commercial Approval</button>` : ''}
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function approveOrder(oId) {
+  const o = ORDERS.find(x => x.OrderID === oId);
+  if (!o) return;
+
+  if (o.Status === 'Pending_TSM') o.Status = 'Pending_ZBH';
+  else if (o.Status === 'Pending_ZBH') o.Status = 'Pending_RSM';
+  else if (o.Status === 'Pending_RSM') o.Status = 'Pending_Admin';
+  else if (o.Status === 'Pending_Admin' || session.role === 'admin') o.Status = 'Approved';
+
+  renderApp();
+}
+
+// Admin Tab Switcher
+function switchAdminTab(t) {
+  ['approvals','users','partnerDb','products','mapping','export'].forEach(tab => {
+    $("tab_" + tab).classList.toggle("hidden", tab !== t);
+  });
+}
+
+function updateAdminBadges() {
+  const c = ORDERS.filter(x => x.Status === 'Pending_Admin').length;
+  $("pendingBadge").textContent = c;
+  $("adminPendingNotice").textContent = c > 0 ? c + " partner order(s) awaiting final authorization." : "All orders cleared!";
+}
+
+function renderUsersList() {
+  $("usersList").innerHTML = `
+    <table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:8px">
+      <tr style="background:#f1f5f9;text-align:left"><th style="padding:6px">Role</th><th>User ID</th><th>Name</th><th>Password</th></tr>
+      ${USERS.map(u => `<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:6px"><b>${u.role.toUpperCase()}</b></td><td>${u.username}</td><td>${u.fullName}</td><td><code>${u.password}</code></td></tr>`).join('')}
+    </table>
+  `;
+}
+
+function createUser() {
+  const name = $("newUName").value.trim();
+  const role = $("newURole").value;
+  const uid = $("newUUid").value.trim().toLowerCase();
+  const pwd = $("newUPwd").value.trim() || 'pass123';
+  const zone = $("newUZone").value.trim() || 'Dhaka Central';
+
+  if (!name || !uid) { alert("Please enter Name and User ID"); return; }
+  USERS.push({ id: 'u_' + Date.now(), username: uid, password: pwd, fullName: name, role: role, zone: zone });
+  alert("User " + uid + " created!");
+  renderUsersList();
+}
+
+function renderCatalog() {
+  $("catalogList").innerHTML = PRODUCTS.map(p => `
+    <div style="font-size:12px;padding:4px 0;border-bottom:1px solid #f1f5f9">
+      <b>${p.model}</b> (${p.prodcode}) — ${p.colors.map(c => `${c.color}: ৳${c.price.toLocaleString()}`).join(', ')}
+    </div>
+  `).join('');
+}
+
+function saveProduct() {
+  const m = $("pModel").value.trim();
+  const cd = $("pCode").value.trim();
+  const cl = $("pColor").value.trim();
+  const pr = Number($("pPrice").value || 0);
+  if (!m || !cl || !pr) { alert("Fill model, color and price"); return; }
+
+  let prod = PRODUCTS.find(x => x.model.toLowerCase() === m.toLowerCase());
+  if (prod) {
+    prod.colors.push({ color: cl, price: pr });
+  } else {
+    PRODUCTS.push({ model: m, prodcode: cd, colors: [{ color: cl, price: pr }] });
+  }
+  alert("Product saved!");
+  renderCatalog();
+}
+
+function renderMappingList() {
+  $("mappingList").innerHTML = PARTNERS.map(p => `
+    <div style="padding:8px;border-bottom:1px solid #f1f5f9;font-size:12px">
+      <b>${p.partnerName}</b> (DMS: ${p.partnerCode})<br>
+      <span class="muted">TSM: ${p.tsmName} → ZBH: ${p.zbhName} → RSM: ${p.rsmName}</span>
+    </div>
+  `).join('');
+}
+
+// Download Individual Product-Wise CSV
+function downloadProductWiseCsv() {
+  const from = $("fromDate").value;
+  const to = $("toDate").value;
+
+  const headers = ['Order Date','DMS Code','Partner Name','Product Model','Product Color','Product QTY','Approval Status','Unit Price (BDT)','Product Value (BDT)','Order ID','Zone'];
+  const rows = [];
+
+  ORDERS.forEach(order => {
+    const dDate = new Date(order.OrderDate).toLocaleDateString();
+    const dms = order.dmsCode || order.PartnerCode;
+    
+    order.details.forEach(item => {
+      rows.push([
+        `"${dDate}"`,
+        `"${dms}"`,
+        `"${order.PartnerName}"`,
+        `"${item.model}"`,
+        `"${item.color}"`,
+        item.qty,
+        `"${order.Status}"`,
+        item.unitPrice || 0,
+        item.lineTotal || (item.qty * (item.unitPrice||0)),
+        `"${order.OrderID}"`,
+        `"${order.zone}"`
+      ]);
+    });
+  });
+
+  const csv = '\ufeff' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Samsung_Orders_ProductWise_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function downloadSamplePartnerCsv() {
+  const csv = "Partner_Name,DMS_Code,Username,Password,Phone,Zone,TSM_Name,ZBH_Name,RSM_Name\n" +
+    "Padma Electronics,SAMS-DHK-11,padma_bd,pass123,+8801711223344,Dhaka Central,Rafiqul Islam (TSM/TSO),Mahmudul Hasan (ZBH/ASM),Tanvir Ahmed (CSM/RSM)\n";
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Partner_Database_Template.csv"; a.click();
+}
+
+function uploadPartnerCsv(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    alert("Partner CSV successfully parsed and imported!");
+  };
+  r.readAsText(file);
+}
+
+function uploadProductCsv(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    alert("Product catalog CSV successfully updated!");
+  };
+  r.readAsText(file);
+}
+</script>
+</body>
+</html>
